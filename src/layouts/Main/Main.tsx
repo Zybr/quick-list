@@ -4,15 +4,15 @@ import Editor from "../../components/Editor/Editor";
 import MainState from "../../types/MainState";
 
 
-interface Props extends Readonly<any> {
-  root: {},
-}
+// interface Props extends Readonly<any> {
+//   root: {},
+// }
 
 class Main extends React.Component {
-  constructor(props: Props, context?: React.ReactNode) {
-    super(props, context);
-    console.log(props);
-  }
+  // constructor(props: Props, context?: React.ReactNode) {
+  //   super(props, context);
+  //   console.log(props);
+  // }
 
   public render() {
     return (
