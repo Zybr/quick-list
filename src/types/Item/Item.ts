@@ -1,18 +1,18 @@
 import Status from "./Status";
 import Priority from "./Priority";
-import NoneState from "./States/NoneState";
+import State from "./State";
 
 interface Item {
+  uid: string,
   name: string,
   description: string,
-  order: number,
   isOpen: boolean,
   isSelected: boolean,
+  isTarget: boolean,
   status: Status,
   priority: Priority,
-  parent: null | Item,
   children: Item[],
-  state: NoneState
+  state: State
 }
 
 export default Item;

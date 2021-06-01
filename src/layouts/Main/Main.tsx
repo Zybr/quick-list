@@ -5,7 +5,7 @@ import MainState from "../../types/MainState";
 
 
 // interface Props extends Readonly<any> {
-//   root: {},
+//   item: {},
 // }
 
 class Main extends React.Component {
@@ -25,7 +25,7 @@ class Main extends React.Component {
 
 export default connect(
   (state: MainState) => ({ // Map state to props
-    root: state.root,
+    root: state.item,
   }),
   (dispatch: Function) => ({ // Map dispatch to props
   })

@@ -1,5 +1,7 @@
+import Item from "./Item/Item";
+
 interface MainState {
-  root: {};
+  item: Item;
 }
 
 export default MainState;

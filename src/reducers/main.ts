@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux'
-import root from "./root";
+import item from "./item";
 
 export default combineReducers({
-  root,
+  item,
 })

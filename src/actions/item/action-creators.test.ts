@@ -1,7 +1,7 @@
 import actionCreators from "./action-creators";
-import { makeItem } from "./item.stub";
 import actionTypes from "./action-types";
 import faker from "faker";
+import { makeItemStub } from "../../stubs/item.stub";
 
 interface CreatorSet {
   creator: string,
@@ -16,7 +16,7 @@ interface CreatorSetMaker {
 declare type CreatorTestSet = CreatorSet | CreatorSetMaker;
 
 describe('Item', () => {
-  const item = makeItem();
+  const item = makeItemStub();
   const items = [item]
   const actionSets = [
     {
