@@ -1,4 +1,5 @@
-import Item from "../../types/Item/Item";
+import Item from "../../types/models/Item/Item";
+import ItemPartial from "../../types/models/Item/ItemPartial";
 
 export interface Action {
   readonly type: string;
@@ -11,8 +12,9 @@ export interface ItemAction extends Action {
 }
 
 export interface CreateItemAction extends Action {
-  parent: Item
-  order: number
+  readonly parent: Item
+  readonly position?: number
+  readonly attributes?: ItemPartial
 }
 
 export interface ChooseItemAction extends ItemAction {
@@ -40,5 +42,7 @@ export interface CutItemsAction extends ItemsAction {
 }
 
 export interface PastItemsAction extends ItemsAction {
+  readonly parent: Item
+  readonly position?: number
 }
 

@@ -1,24 +1,24 @@
-import Item from "../../types/Item/Item";
-import { OPEN_STATUS } from "../../types/Item/Status";
-import { LOW_PRIORITY } from "../../types/Item/Priority";
-import { NONE_STATE } from "../../types/Item/State";
-import ItemPartial from "../../types/Item/ItemPartial";
+import Item from "../../types/models/Item/Item";
+import ItemPartial from "../../types/models/Item/ItemPartial";
 import { v4 as uuid } from "uuid";
 import ItemDecorator from "./Decorator";
+import PriorityEnum from "../../types/models/Item/Priority.enum";
+import StateEnum from "../../types/models/Item/State.enum";
+import StatusEnum from "../../types/models/Item/Status.enum";
+import ItemIdentifier from "../../types/models/Item/ItemIdentifier";
 
 class ItemManager extends ItemDecorator {
-  private readonly defaultParams = {
+  private readonly defaultAttributes = {
     uid: null,
     name: 'Item',
     description: '',
     isOpen: false,
     isSelected: false,
     isTarget: false,
-    status: OPEN_STATUS,
-    priority: LOW_PRIORITY,
-    parent: null,
+    status: StatusEnum.open,
+    priority: PriorityEnum.low,
     children: [],
-    state: NONE_STATE
+    state: StateEnum.none
   }
 
   get children(): ItemManager[] {
@@ -29,21 +29,37 @@ class ItemManager extends ItemDecorator {
     this.root.children = items.map(item => item.getItem());
   }
 
-  public create(params: ItemPartial, position: number = Infinity): ItemManager {
-    const newItem = Object.assign({}, this.defaultParams, params, {
-      parent: this,
-      uid: uuid()
-    });
+  public create(attributes: ItemPartial = {}, position: number = Infinity): ItemManager {
+    const newItem = Object.assign({},
+      this.defaultAttributes,
+      {uid: uuid()},
+      attributes,
+    );
 
-    this
-      .root
+    if (this.has(ItemManager.getIdentifier(attributes))) {
+      throw new Error(`An item with UID "${attributes.uid}" already exists.`);
+    }
+
+    this.root
       .children
       .splice(this.definePosition(position), 0, newItem);
 
     return new ItemManager(newItem);
   }
 
-  public update(changes: {}, conditions: ItemPartial = {}): ItemManager[] {
+  public clone(): ItemManager {
+    const itemMng = new ItemManager(
+      Object.assign({}, this.getItem(), {
+        uid: null
+      })
+    );
+    itemMng.children = itemMng.children
+      .map(itemMng => itemMng.clone());
+
+    return itemMng;
+  }
+
+  public update(changes: ItemPartial, conditions: ItemPartial = {}): ItemManager[] {
     return this
       .filter(conditions)
       .map((item: ItemManager) => Object.assign(item, changes))
@@ -97,23 +113,30 @@ class ItemManager extends ItemDecorator {
       .map((item: Item) => new ItemManager(item));
   }
 
-  public find(item: Item): null | ItemManager {
-    const foundItem = this
-      .flatten()
-      .find(innerItem => innerItem.uid === item.uid) as Item
+  public find(id: ItemIdentifier): ItemManager {
+    if (!this.has(ItemManager.getIdentifier(id))) {
+      throw new Error(`Item with UID "${id?.uid}" was not defined.`);
+    }
 
-    return foundItem ? new ItemManager(foundItem) : null;
+    return this.filter(ItemManager.getIdentifier(id))[0];
   }
 
-  public filter(conditions: ItemPartial): ItemManager[] {
+  public has(id: ItemIdentifier): boolean {
+    return !!this.filter(ItemManager.getIdentifier(id)).length
+  }
+
+  public filter(conditions: ItemPartial | FilterFunction): ItemManager[] {
     return this
       .flatten()
       .filter((item: ItemManager) => this.doesItFit(item, conditions))
   }
 
-  private doesItFit(item: Item, conditions: Record<string, any>): boolean {
-    return !Object.keys(conditions)
-      .some((key: string) => conditions[key] !== (item as Record<string, any>)[key]);
+  private getParent(item: Item): null | ItemManager {
+    return this.flatten()
+      .filter(innerItem => innerItem
+        .children
+        .find((child) => child.uid === item.uid)
+      )[0] || null;
   }
 
   private definePosition(position: number = Infinity) {
@@ -123,13 +146,21 @@ class ItemManager extends ItemDecorator {
     return position;
   }
 
-  private getParent(item: Item): null | ItemManager {
-    return this.flatten()
-      .find(innerItem => innerItem
-        .children
-        .find((child) => child.uid === item.uid)
-      ) || null;
+  private static getIdentifier(identifier: ItemIdentifier): ItemIdentifier {
+    return {uid: identifier?.uid}
   }
+
+  private doesItFit(item: Item, conditions: Record<string, any>): boolean {
+    conditions = conditions instanceof ItemManager ? conditions.getItem() : conditions;
+    conditions = conditions.uid ? {uid: conditions.uid} : conditions;
+
+    return !Object.keys(conditions)
+      .some((key: string) => conditions[key] !== (item as Record<string, any>)[key]);
+  }
+}
+
+interface FilterFunction {
+  (item: Item): boolean
 }
 
 export default ItemManager;

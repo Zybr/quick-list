@@ -28,14 +28,18 @@ describe('Item', () => {
       }
     },
     () => {
-      const order = faker.datatype.number();
+      const attributes = {
+        name: faker.lorem.word()
+      };
+      const position = faker.datatype.number();
       return {
         creator: 'createItem',
-        params: [item, order],
+        params: [item, attributes, position],
         result: {
           type: actionTypes.CREATE_ITEM_ACTION,
-          order,
           parent: item,
+          attributes,
+          position,
         }
       }
     },
@@ -79,12 +83,19 @@ describe('Item', () => {
         items,
       }
     },
-    {
-      creator: 'pastItems',
-      params: [items],
-      result: {
-        type: actionTypes.PAST_ITEMS_ACTION,
-        items,
+    () => {
+      const parent = item;
+      const items = [makeItemStub(), makeItemStub()];
+      const position = faker.datatype.number();
+      return {
+        creator: 'pastItems',
+        params: [parent, items, position],
+        result: {
+          type: actionTypes.PAST_ITEMS_ACTION,
+          parent,
+          items,
+          position,
+        }
       }
     },
   ];

@@ -1,7 +1,7 @@
-import Item from "../../types/Item/Item";
-import Status from "../../types/Item/Status";
-import Priority from "../../types/Item/Priority";
-import State from "../../types/Item/State";
+import Item from "../../types/models/Item/Item";
+import State from "../../types/models/Item/State.enum";
+import StatusEnum from "../../types/models/Item/Status.enum";
+import PriorityEnum from "../../types/models/Item/Priority.enum";
 
 abstract class ItemDecorator implements Item {
   protected readonly root: Item;
@@ -14,8 +14,12 @@ abstract class ItemDecorator implements Item {
     return this.root;
   }
 
-  get uid(): string {
+  get uid(): null | string {
     return this.root.uid;
+  }
+
+  set uid(uid) {
+    this.root.uid = uid;
   }
 
   get name(): string {
@@ -58,7 +62,7 @@ abstract class ItemDecorator implements Item {
     this.root.isTarget = isTarget;
   }
 
-  get status(): Status {
+  get status(): StatusEnum {
     return this.root.status;
   }
 
@@ -66,7 +70,7 @@ abstract class ItemDecorator implements Item {
     this.root.status = status;
   }
 
-  get priority(): Priority {
+  get priority(): PriorityEnum {
     return this.root.priority;
   }
 

@@ -1,5 +1,7 @@
 import { makeItemStub } from "../../stubs/item.stub";
 import Manager from "./Manager";
+import ItemManager from "./Manager";
+import Item from "../../types/models/Item/Item";
 
 describe("ItemManager", () => {
   let itemMng: Manager;
@@ -55,6 +57,27 @@ describe("ItemManager", () => {
         '2',
         '10',
       ]);
+  })
+
+  test('.clone()', () => {
+    const item = makeItemStub(rootTemplate);
+    const unsetUid = (item: Item): Item => ({
+      ...item,
+      uid: null,
+      children: item.children
+        .map(subItem => unsetUid(subItem)),
+    });
+
+    expect(item.uid).not.toBeNull();
+
+    expect(
+      unsetUid(item)
+    )
+      .toEqual(
+        (new ItemManager(item))
+          .clone()
+          .getItem()
+      );
   })
 
   test('.update() all', () => {
@@ -159,8 +182,7 @@ describe("ItemManager", () => {
       .toEqual([target.name])
     expect(itemMng.children[1].children[0].children)
       .toHaveLength(0)
-    expect(itemMng.find(target))
-      .toEqual(null)
+    expect(itemMng.has(target)).toBeFalsy()
   });
 
   test('.flatten()', () => {
@@ -182,11 +204,12 @@ describe("ItemManager", () => {
 
   test('.find()', () => {
     const target = itemMng.getItem();
+    expect(itemMng.find(target)?.uid).toEqual(target.uid)
+  });
 
-    expect(
-      itemMng.find(target)?.uid
-    )
-      .toEqual(target.uid)
+  test('.has()', () => {
+    const target = itemMng.getItem()
+    expect(itemMng.has(target)).toBeTruthy();
   });
 
   test('.filter()', () => {

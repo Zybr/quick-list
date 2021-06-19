@@ -1,14 +1,13 @@
-import Item from "../types/Item/Item";
+import Item from "../types/models/Item/Item";
 import { v4 as uuid } from "uuid";
 
 export const makeItemStub = (params = {}): Item => {
   const parent = Object.assign(
     {
-      children: [] as Item[]
-    },
-    {
+      children: [] as Item[],
       uid: uuid(),
-      name: '0'
+      name: '0',
+      isTarget: false,
     },
     params,
   );

@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import Editor from "../../components/Editor/Editor";
-import MainState from "../../types/MainState";
+import MainState from "../../types/states/MainState";
 
 
 // interface Props extends Readonly<any> {
@@ -25,7 +25,7 @@ class Main extends React.Component {
 
 export default connect(
   (state: MainState) => ({ // Map state to props
-    root: state.item,
+    root: state.item.root,
   }),
   (dispatch: Function) => ({ // Map dispatch to props
   })

@@ -8,17 +8,19 @@ import {
   SelectItemAction,
   UnselectItemsAction
 } from "./actions";
-import Item from "../../types/Item/Item";
+import Item from "../../types/models/Item/Item";
 import actionTypes from "./action-types";
+import ItemPartial from "../../types/models/Item/ItemPartial";
 
 export const chooseItem = (item: Item): ChooseItemAction => ({
   type: actionTypes.CHOOSE_ITEM_ACTION,
   item,
 });
-export const createItem = (parent: Item, order: number): CreateItemAction => ({
+export const createItem = (parent: Item, attributes?: ItemPartial, position?: number): CreateItemAction => ({
   type: actionTypes.CREATE_ITEM_ACTION,
   parent,
-  order,
+  attributes,
+  position,
 });
 export const editItem = (item: Item): EditItemAction => ({
   type: actionTypes.EDIT_ITEM_ACTION,
@@ -41,9 +43,11 @@ export const unselectItems = (items: Item[]): UnselectItemsAction => ({
   type: actionTypes.UNSELECT_ITEMS_ACTION,
   items,
 });
-export const pastItems = (items: Item[]): PastItemsAction => ({
+export const pastItems = (parent: Item, items: Item[], position?: number): PastItemsAction => ({
   type: actionTypes.PAST_ITEMS_ACTION,
+  parent,
   items,
+  position,
 });
 
 const actionCreators = {
