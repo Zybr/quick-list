@@ -5,7 +5,9 @@ export interface Action {
   readonly type: string;
 }
 
-// Single item actions
+// Base
+
+// Base. Single item actions.
 
 export interface ItemAction extends Action {
   readonly item: Item;
@@ -26,7 +28,7 @@ export interface EditItemAction extends ItemAction {
 export interface SelectItemAction extends ItemAction {
 }
 
-// Item list actions
+// Base. Item list actions
 
 export interface ItemsAction extends Action {
   readonly items: Item[];
@@ -46,3 +48,37 @@ export interface PastItemsAction extends ItemsAction {
   readonly position?: number
 }
 
+// General
+
+export interface MoveUpAction extends Action {
+}
+
+export interface MoveDownAction extends Action {
+}
+
+export interface MoveInsideAction extends Action {
+}
+
+export interface MoveOutsideAction extends Action {
+}
+
+export interface CreateNextAction extends Action {
+}
+
+export interface CreatePreviousAction extends Action {
+}
+
+export interface CreateChildAction extends Action {
+}
+
+export interface RemoveAction extends Action {
+}
+
+export interface CopyAction extends Action {
+}
+
+export interface CutAction extends Action {
+}
+
+export interface PastAction extends Action {
+}

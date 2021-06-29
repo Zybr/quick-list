@@ -28,6 +28,68 @@ describe("ItemManager", () => {
     itemMng = new Manager(makeItemStub(rootTemplate));
   })
 
+  test('.isRoot', () => {
+    expect(new Manager(makeItemStub()).isRoot).toBeTruthy();
+
+    expect(new Manager(makeItemStub({
+      children: [{}]
+    })).children[0].isRoot).toBeFalsy();
+  })
+
+  test('.isFirst', () => {
+    expect(itemMng.isFirst).toBeTruthy();
+    expect(itemMng.children[0].isFirst).toBeTruthy();
+    expect(itemMng.children[1].isFirst).toBeFalsy();
+  })
+
+  test('.isLast', () => {
+    expect(itemMng.isLast).toBeTruthy();
+    expect(itemMng.children[0].isLast).toBeFalsy();
+    expect(itemMng.children[1].isLast).toBeTruthy();
+  })
+
+  test('.order', () => {
+    expect(new Manager(makeItemStub({})).order).toEqual(0);
+    expect(itemMng.children[1].order).toEqual(1);
+  })
+
+  test('.parent', () => {
+    expect(new Manager(makeItemStub()).parent).toBeNull();
+
+    const state = makeItemStub({children: [{}]});
+
+    expect(new Manager(state).children[0].parent?.getItem()).toEqual(state);
+  })
+
+  test('.next', () => {
+    expect(itemMng.children[0].next).toEqual(itemMng.children[1]);
+    expect(itemMng.children[1].next).toBeNull();
+  });
+
+  test('.prev', () => {
+    expect(itemMng.children[0].prev).toBeNull();
+    expect(itemMng.children[1].prev).toEqual(itemMng.children[0]);
+  });
+
+  test('.getTarget()', () => {
+    expect(itemMng.gegTarget()).toBeNull();
+    itemMng.children[1].isTarget = true;
+    expect(itemMng.gegTarget()).toEqual(itemMng.children[1]);
+  })
+
+  describe('.setTarget()', () => {
+    test('set', () => {
+      itemMng.setTarget(itemMng.children[1]);
+      expect(itemMng.children[1].isTarget).toBeTruthy()
+      expect(itemMng.flatten().filter(item => item.isTarget).length).toEqual(1);
+    })
+    test('unset', () => {
+      itemMng.setTarget(null);
+      expect(itemMng.flatten().filter(item => item.isTarget))
+        .toHaveLength(0)
+    })
+  })
+
   test('.create()', () => {
     const parent = makeItemStub();
     const itemMng = new Manager(parent);

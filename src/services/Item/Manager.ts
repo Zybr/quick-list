@@ -21,12 +21,52 @@ class ItemManager extends ItemDecorator {
     state: StateEnum.none
   }
 
+  private readonly root: Item;
+
+  constructor(item: Item, root: null | Item = null) {
+    super(item);
+    this.root = null === root ? item : root;
+  }
+
+  get order(): number {
+    return this.isRoot
+      ? 0
+      : this.parent
+        ?.children
+        ?.map(child => child.getItem())
+        .indexOf(this.getItem()) as number;
+  }
+
+  get isRoot(): boolean {
+    return null === this.parent
+  }
+
+  get isFirst(): boolean {
+    return 0 === this.order;
+  }
+
+  get isLast(): boolean {
+    return !this.parent || this.parent.children.length === this.order + 1;
+  }
+
+  get parent(): null | ItemManager {
+    return this.getParent(this);
+  }
+
+  get next(): null | ItemManager {
+    return this.parent?.children[this.order + 1] || null;
+  }
+
+  get prev(): null | ItemManager {
+    return this.parent?.children[this.order - 1] || null;
+  }
+
   get children(): ItemManager[] {
-    return this.root.children.map(item => new ItemManager(item));
+    return this.item.children.map(item => new ItemManager(item, this.root));
   }
 
   set children(items: ItemManager[]) {
-    this.root.children = items.map(item => item.getItem());
+    this.item.children = items.map(item => item.getItem());
   }
 
   public create(attributes: ItemPartial = {}, position: number = Infinity): ItemManager {
@@ -40,21 +80,19 @@ class ItemManager extends ItemDecorator {
       throw new Error(`An item with UID "${attributes.uid}" already exists.`);
     }
 
-    this.root
+    this.item
       .children
       .splice(this.definePosition(position), 0, newItem);
 
-    return new ItemManager(newItem);
+    return new ItemManager(newItem, this.root);
   }
 
   public clone(): ItemManager {
     const itemMng = new ItemManager(
-      Object.assign({}, this.getItem(), {
-        uid: null
-      })
-    );
-    itemMng.children = itemMng.children
-      .map(itemMng => itemMng.clone());
+      JSON.parse(JSON.stringify(this.item)),
+      JSON.parse(JSON.stringify(this.root)),
+    )
+    itemMng.update({uid: null});
 
     return itemMng;
   }
@@ -83,13 +121,13 @@ class ItemManager extends ItemDecorator {
     return this
       .filter(conditions)
       .map((item: ItemManager) => {
-          const parent = this.getParent(item);
-
-          return parent
-            ? parent.getItem()
+          return item.parent
+            ? item
+              .parent
+              .getItem()
               .children
               .splice(
-                parent
+                item.parent
                   .children
                   .map(child => child.uid)
                   .indexOf(item.uid),
@@ -100,17 +138,17 @@ class ItemManager extends ItemDecorator {
         }
       )
       .filter(item => !!item)
-      .map(item => new ItemManager(item as Item))
+      .map(item => new ItemManager(item as Item, this.root))
   }
 
   public flatten(): ItemManager[] {
-    return [this.root]
+    return [this.item]
       .concat(
-        ...this.root.children.map(
-          child => (new ItemManager(child)).flatten()
+        ...this.item.children.map(
+          child => (new ItemManager(child, this.root)).flatten()
         )
       )
-      .map((item: Item) => new ItemManager(item));
+      .map((item: Item) => new ItemManager(item, this.root));
   }
 
   public find(id: ItemIdentifier): ItemManager {
@@ -131,8 +169,27 @@ class ItemManager extends ItemDecorator {
       .filter((item: ItemManager) => this.doesItFit(item, conditions))
   }
 
+  public gegTarget(): null | ItemManager {
+    const targets = this.filter({isTarget: true});
+    if (targets.length > 1) {
+      throw new Error('There are several targets: ' + targets.map(target => target.uid).join(', '));
+    }
+
+    return targets[0] || null;
+  }
+
+  public setTarget(item: null | ItemManager) {
+    const root = new ItemManager(this.root);
+    root.update({isTarget: false});
+
+    if (item) {
+      root.find(item).isTarget = true;
+    }
+  }
+
   private getParent(item: Item): null | ItemManager {
-    return this.flatten()
+    return new ItemManager(this.root)
+      .flatten()
       .filter(innerItem => innerItem
         .children
         .find((child) => child.uid === item.uid)

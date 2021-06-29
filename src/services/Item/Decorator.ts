@@ -4,86 +4,86 @@ import StatusEnum from "../../types/models/Item/Status.enum";
 import PriorityEnum from "../../types/models/Item/Priority.enum";
 
 abstract class ItemDecorator implements Item {
-  protected readonly root: Item;
+  protected readonly item: Item;
 
-  constructor(root: Item) {
-    this.root = root instanceof ItemDecorator ? root.getItem() : root;
+  constructor(item: Item) {
+    this.item = item instanceof ItemDecorator ? item.getItem() : item;
   }
 
   public getItem(): Item {
-    return this.root;
+    return this.item;
   }
 
   get uid(): null | string {
-    return this.root.uid;
+    return this.item.uid;
   }
 
   set uid(uid) {
-    this.root.uid = uid;
+    this.item.uid = uid;
   }
 
   get name(): string {
-    return this.root.name;
+    return this.item.name;
   }
 
   set name(name) {
-    this.root.name = name;
+    this.item.name = name;
   }
 
   get description(): string {
-    return this.root.description;
+    return this.item.description;
   }
 
   set description(description) {
-    this.root.description = description;
+    this.item.description = description;
   }
 
   get isOpen(): boolean {
-    return this.root.isOpen;
+    return this.item.isOpen;
   }
 
   set isOpen(isOpen) {
-    this.root.isOpen = isOpen;
+    this.item.isOpen = isOpen;
   }
 
   get isSelected(): boolean {
-    return this.root.isSelected;
+    return this.item.isSelected;
   }
 
   set isSelected(isSelected) {
-    this.root.isSelected = isSelected;
+    this.item.isSelected = isSelected;
   }
 
   get isTarget(): boolean {
-    return this.root.isTarget;
+    return this.item.isTarget;
   }
 
   set isTarget(isTarget) {
-    this.root.isTarget = isTarget;
+    this.item.isTarget = isTarget;
   }
 
   get status(): StatusEnum {
-    return this.root.status;
+    return this.item.status;
   }
 
   set status(status) {
-    this.root.status = status;
+    this.item.status = status;
   }
 
   get priority(): PriorityEnum {
-    return this.root.priority;
+    return this.item.priority;
   }
 
   set priority(priority) {
-    this.root.priority = priority;
+    this.item.priority = priority;
   }
 
   get state(): State {
-    return this.root.state;
+    return this.item.state;
   }
 
   set state(state) {
-    this.root.state = state;
+    this.item.state = state;
   }
 
   abstract get children(): ItemDecorator[];

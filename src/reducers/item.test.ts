@@ -1,11 +1,10 @@
 import actionTypes from "../actions/item/action-types";
 import item from "./item";
 import {
-  chooseItem,
-  copyItems,
-  createItem,
-  cutItems,
-  editItem, pastItems,
+  chooseItem, copy, copyItems, createChild, createItem, createNext, createPrevious, cut, cutItems,
+  editItem,
+  moveDown, moveInside, moveOutside, moveUp,
+  past, pastItems, remove,
   selectItem,
   unselectItems
 } from "../actions/item/action-creators";
@@ -48,7 +47,6 @@ describe("reducer 'item'", () => {
             ]
           }
         ],
-        isTarget: true,
       }),
       copies: [],
       errors: [],
@@ -57,8 +55,9 @@ describe("reducer 'item'", () => {
     notExistedItem = makeItemStub();
   })
 
-  describe(`${actionTypes.CHOOSE_ITEM_ACTION}`, () => {
-    test('Positive', () => {
+  describe('Positive', () => {
+
+    test(`${actionTypes.CHOOSE_ITEM}`, () => {
       const updState = item(state, chooseItem(state.root.children[1]));
       assertNoErrors(updState);
 
@@ -67,13 +66,7 @@ describe("reducer 'item'", () => {
       expect(updState).toEqual(state);
     });
 
-    test('Negative. Not found.', () => assertNotFoundError(item(state, chooseItem(notExistedItem))));
-
-    test('Immutable', () => assertImmutableAction(state, () => chooseItem(state.root.children[1])));
-  });
-
-  describe(`${actionTypes.CREATE_ITEM_ACTION}`, () => {
-    test("Positive", () => {
+    test(`${actionTypes.CREATE_ITEM}`, () => {
       const attributes = {
         uid: "eceed243-b0a5-416c-b48b-320d4fa80b96",
         name: "new",
@@ -89,30 +82,7 @@ describe("reducer 'item'", () => {
       expect(updState).toEqual(state);
     });
 
-
-    describe('Negative', () => {
-      test("Duplicated UID", () => {
-        const attributes = {uid: "eceed243-b0a5-416c-b48b-320d4fa80b96"};
-
-        let updState = item(state, createItem(state.root.children[1], attributes, position));
-        updState = item(updState, createItem(state.root.children[1], attributes, position));
-        assertHasError(updState, 'already exists');
-
-        state.root.children[1].children.splice(position, 0, {
-          ...defaultAttributes,
-          ...attributes,
-        });
-        expect(updState.root).toEqual(state.root);
-      });
-
-      test('Parent was not found', () => assertNotFoundError(item(state, chooseItem(notExistedItem))));
-    });
-
-    test('Immutable', () => assertImmutableAction(state, () => createItem(state.root.children[1], {}, position)));
-  });
-
-  describe(`${actionTypes.EDIT_ITEM_ACTION}`, () => {
-    test('Positive', () => {
+    test(`${actionTypes.EDIT_ITEM}`, () => {
       let updState = item(state, editItem(state.root.children[0]));
       assertNoErrors(updState);
 
@@ -127,13 +97,7 @@ describe("reducer 'item'", () => {
       expect(updState).toEqual(state);
     });
 
-    test('Negative. Not found.', () => assertNotFoundError(item(state, editItem(notExistedItem))));
-
-    test('Immutable', () => assertImmutableAction(state, () => editItem(state.root.children[1])));
-  });
-
-  describe(`${actionTypes.SELECT_ITEM_ACTION}`, () => {
-    test('Positive', () => {
+    test(`${actionTypes.SELECT_ITEM}`, () => {
       let updState = item(state, selectItem(state.root.children[0]));
       assertNoErrors(updState);
 
@@ -141,14 +105,7 @@ describe("reducer 'item'", () => {
       expect(updState).toEqual(state);
     });
 
-    test('Immutable', () => assertImmutableAction(state, () => selectItem(state.root.children[0])));
-
-    test('Negative. Not found.', () => assertNotFoundError(item(state, selectItem(notExistedItem))));
-  });
-
-
-  describe(`${actionTypes.UNSELECT_ITEMS_ACTION}`, () => {
-    test('Positive', () => {
+    test(`${actionTypes.UNSELECT_ITEMS}`, () => {
       state.root.children.map(item => item.isSelected = true)
 
       let updState = item(state, unselectItems(state.root.children));
@@ -158,13 +115,7 @@ describe("reducer 'item'", () => {
       expect(updState).toEqual(state);
     });
 
-    test('Immutable', () => assertImmutableAction(state, () => unselectItems(state.root.children)));
-
-    test('Negative. Not found.', () => assertNotFoundError(item(state, unselectItems([notExistedItem]))));
-  });
-
-  describe(`${actionTypes.COPY_ITEMS_ACTION}`, () => {
-    test('Positive', () => {
+    test(`${actionTypes.COPY_ITEMS}`, () => {
       let updState = item(state, copyItems([state.root.children[0]]));
       assertNoErrors(updState);
 
@@ -177,13 +128,7 @@ describe("reducer 'item'", () => {
       expect(updState.copies).toEqual(state.copies);
     });
 
-    test('Immutable', () => assertImmutableAction(state, () => copyItems(state.root.children)));
-
-    test('Negative. Not found.', () => assertNotFoundError(item(state, copyItems([notExistedItem]))));
-  });
-
-  describe(`${actionTypes.CUT_ITEMS_ACTION}`, () => {
-    test('Positive', () => {
+    test(`${actionTypes.CUT_ITEMS}`, () => {
       const target = state.root.children[0]
       let updState = item(state, cutItems([target]));
       assertNoErrors(updState);
@@ -198,33 +143,108 @@ describe("reducer 'item'", () => {
       expect(updState.root).toEqual(state.root);
     });
 
-    test('Immutable', () => assertImmutableAction(state, () => cutItems(state.root.children)));
+    test(`${actionTypes.PAST_ITEMS}`, () => {
+      const newItems = [makeItemStub({...defaultAttributes}), makeItemStub({...defaultAttributes})];
 
-    test('Negative. Not found.', () => assertNotFoundError(item(state, cutItems([notExistedItem]))));
-  });
-
-  describe(`${actionTypes.PAST_ITEMS_ACTION}`, () => {
-    let parent: Item;
-    let newItems: Item[];
-    let position: number;
-
-    beforeEach(() => {
-      parent = state.root;
-      newItems = [makeItemStub({...defaultAttributes}), makeItemStub({...defaultAttributes})];
-      position = 1;
-    });
-
-    test('Positive', () => {
-      let updState = item(state, pastItems(parent, newItems, position));
+      let updState = item(state, pastItems(state.root, newItems, position));
       assertNoErrors(updState);
 
       state.root.children.splice(position, 0, ...newItems)
       expect(updState).toEqual(state);
     });
 
-    test('Immutable', () => assertImmutableAction(state, () => pastItems(parent, newItems, position)));
+    describe(`${actionTypes.MOVE_UP}`, () => {
+      test(`Root`, () => {
+        state.root.isTarget = true;
 
-    test('Negative. Not found.', () => assertNotFoundError(item(state, pastItems(makeItemStub(), newItems, position))));
+        let updState = item(state, moveUp());
+        assertNoErrors(updState);
+
+        expect(updState).toEqual(state);
+      });
+
+      test(`First`, () => {
+        state.root.children[1].children[0].isTarget = true;
+
+        let updState = item(state, moveUp());
+        assertNoErrors(updState);
+
+        state.root.children[1].children[0].isTarget = false;
+        state.root.children[1].isTarget = true;
+        expect(updState).toEqual(state);
+      });
+
+      test(`Not first`, () => {
+        state.root.children[1].children[1].isTarget = true;
+
+        let updState = item(state, moveUp());
+        assertNoErrors(updState);
+
+        state.root.children[1].children[0].isTarget = true;
+        state.root.children[1].children[1].isTarget = false;
+        expect(updState).toEqual(state);
+      });
+    });
+  });
+
+  describe('Negative', () => {
+    test(`${actionTypes.CHOOSE_ITEM}. Not found.`, () => assertNotFoundError(item(state, chooseItem(notExistedItem))));
+    describe(`${actionTypes.CREATE_ITEM}`, () => {
+      test('Parent was not found', () => assertNotFoundError(item(state, createItem(notExistedItem))));
+      test("Duplicated UID", () => {
+        const attributes = {uid: "eceed243-b0a5-416c-b48b-320d4fa80b96"};
+
+        let updState = item(state, createItem(state.root.children[1], attributes, position));
+        updState = item(updState, createItem(state.root.children[1], attributes, position));
+        assertHasError(updState, 'already exists');
+
+        state.root.children[1].children.splice(position, 0, {
+          ...defaultAttributes,
+          ...attributes,
+        });
+        expect(updState.root).toEqual(state.root);
+      });
+    });
+    test(`${actionTypes.EDIT_ITEM}. Not found.`, () => assertNotFoundError(item(state, editItem(notExistedItem))));
+    test(`${actionTypes.SELECT_ITEM}. Not found.`, () => assertNotFoundError(item(state, selectItem(notExistedItem))));
+    test(`${actionTypes.UNSELECT_ITEMS}. Not found.`, () => assertNotFoundError(item(state, unselectItems([notExistedItem]))));
+    test(`${actionTypes.COPY_ITEMS}. Not found.`, () => assertNotFoundError(item(state, copyItems([notExistedItem]))));
+    test(`${actionTypes.CUT_ITEMS}. Not found.`, () => assertNotFoundError(item(state, cutItems([notExistedItem]))));
+    test(`${actionTypes.PAST_ITEMS}. Not found.`, () => assertNotFoundError(item(state, pastItems(
+      makeItemStub(),
+      [makeItemStub({...defaultAttributes}), makeItemStub({...defaultAttributes})],
+      position
+    ))));
+  });
+
+  describe('Immutable', () => {
+    test(`${actionTypes.CHOOSE_ITEM}`, () => assertImmutableAction(state, () => chooseItem(state.root.children[1])));
+    test(`${actionTypes.CREATE_ITEM}`, () => assertImmutableAction(state, () => createItem(
+      state.root.children[1],
+      {},
+      position
+    )));
+    test(`${actionTypes.EDIT_ITEM}`, () => assertImmutableAction(state, () => editItem(state.root.children[1])));
+    test(`${actionTypes.SELECT_ITEM}`, () => assertImmutableAction(state, () => selectItem(state.root.children[0])));
+    test(`${actionTypes.UNSELECT_ITEMS}`, () => assertImmutableAction(state, () => unselectItems(state.root.children)));
+    test(`${actionTypes.COPY_ITEMS}`, () => assertImmutableAction(state, () => copyItems(state.root.children)));
+    test(`${actionTypes.CUT_ITEMS}`, () => assertImmutableAction(state, () => cutItems(state.root.children)));
+    test(`${actionTypes.PAST_ITEMS}`, () => assertImmutableAction(state, () => pastItems(
+      state.root,
+      [makeItemStub({...defaultAttributes}), makeItemStub({...defaultAttributes})],
+      position
+    )));
+    test(`${actionTypes.MOVE_UP}`, () => assertImmutableAction(state, () => moveUp()))
+    test(`${actionTypes.MOVE_DOWN}`, () => assertImmutableAction(state, () => moveDown()))
+    test(`${actionTypes.MOVE_INSIDE}`, () => assertImmutableAction(state, () => moveInside()))
+    test(`${actionTypes.MOVE_OUTSIDE}`, () => assertImmutableAction(state, () => moveOutside()))
+    test(`${actionTypes.CREATE_PREVIOUS}`, () => assertImmutableAction(state, () => createPrevious()))
+    test(`${actionTypes.CREATE_NEXT}`, () => assertImmutableAction(state, () => createNext()))
+    test(`${actionTypes.CREATE_CHILD}`, () => assertImmutableAction(state, () => createChild()))
+    test(`${actionTypes.REMOVE}`, () => assertImmutableAction(state, () => remove()))
+    test(`${actionTypes.COPY}`, () => assertImmutableAction(state, () => copy()))
+    test(`${actionTypes.CUT}`, () => assertImmutableAction(state, () => cut()))
+    test(`${actionTypes.PAST}`, () => assertImmutableAction(state, () => past()))
   });
 });
 
